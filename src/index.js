@@ -11,7 +11,6 @@ let totalImages = 0;
 const gallery = new SimpleLightbox('.gallery a');
 
 refs.formEl.addEventListener('submit', onSubmitForm);
-refs.loadMoreBtn.addEventListener('click', onBtnClick);
 
 async function onSubmitForm(e) {
   e.preventDefault();
@@ -19,27 +18,24 @@ async function onSubmitForm(e) {
   clearInput();
   page = 1;
   totalImages = 0;
-  // window.addEventListener('scroll', handleScroll);
   refs.listEl.innerHTML = '';
 
-  if (searchQuery === '') return Notify.info('Enter some query text');
-
-  if (!refs.loadMoreBtn.classList.contains('hidden')) loadBtnToggle();
+  if (searchQuery === '') {
+    Notify.info('Enter some query text');
+    hideLoadMoreButton();
+    return;
+  }
 
   try {
     const response = await fetchImages(searchQuery, page);
 
     if (response.hits.length === 0) {
-      return Notify.failure(
+      Notify.failure(
         'Sorry, there are no images matching your search query. Please try again.'
       );
+      hideLoadMoreButton();
+      return;
     }
-
-    if (
-      refs.loadMoreBtn.classList.contains('hidden') &&
-      response.hits.length === 40
-    )
-      loadBtnToggle();
 
     const markup = await markupCreate(response.hits);
 
@@ -50,12 +46,18 @@ async function onSubmitForm(e) {
     scrollBy();
 
     gallery.refresh();
-    // clearInput();
-    // loadBtnToggle();
+
+    if (response.hits.length < 29) {
+      hideLoadMoreButton();
+    } else {
+      showLoadMoreButton();
+    }
   } catch (error) {
     console.log(error);
   }
 }
+
+refs.loadMoreBtn.addEventListener('click', onBtnClick);
 
 async function onBtnClick() {
   page += 1;
@@ -63,8 +65,7 @@ async function onBtnClick() {
     const response = await fetchImages(searchQuery, page);
     totalImages += response.hits.length;
     if (response.hits.length < 40 || totalImages >= response.totalHits) {
-      loadBtnToggle();
-      // window.removeEventListener("scroll", handleScroll);
+      hideLoadMoreButton();
       Notify.info("We're sorry, but you've reached the end of search results.");
     }
     const markup = await markupCreate(response.hits);
@@ -77,19 +78,15 @@ async function onBtnClick() {
     console.log(error);
   }
 }
-
-function loadBtnToggle() {
-  refs.loadMoreBtn.classList.toggle('hidden');
+function showLoadMoreButton() {
+  refs.loadMoreBtn.classList.add('visible');
 }
+
+function hideLoadMoreButton() {
+  refs.loadMoreBtn.classList.remove('visible');
+}
+
 
 function clearInput() {
   refs.formEl.reset();
 }
-
-// function handleScroll() {
-//   const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
-
-//   if (scrollTop + clientHeight >= scrollHeight - 5) {
-//     onBtnClick();
-//   }
-// }
