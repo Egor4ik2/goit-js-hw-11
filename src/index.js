@@ -47,7 +47,7 @@ async function onSubmitForm(e) {
 
     gallery.refresh();
 
-    if (response.hits.length < 29) {
+    if (response.hits.length < 40) {
       hideLoadMoreButton();
     } else {
       showLoadMoreButton();
@@ -55,6 +55,8 @@ async function onSubmitForm(e) {
   } catch (error) {
     console.log(error);
   }
+  
+  refs.loadMoreBtn.classList.remove('hidden');
 }
 
 refs.loadMoreBtn.addEventListener('click', onBtnClick);
